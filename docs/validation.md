@@ -14,6 +14,7 @@
 | 실제 native 중계 | `npm run test:native`, 임시 loopback 서버/테스트 계정 | agent 로그인 → 온라인 → 실제 JPEG → 종료 → 두 번째 세션/화면 → agent 로그아웃/세션 종료 통과 |
 | Windows 패키지 | self-contained win-x64 publish | versioned ZIP, SHA256, manifest, MIT/.NET 원문 고지 생성 |
 | 웹 다운로드/고지 | 로그인한 HTTP 클라이언트로 로컬 패키지 다운로드 | 실제 응답 ZIP의 SHA-256과 manifest 일치, `/license`와 `/licenses` 원문 응답 확인 |
+| 최초 계정 생성 | 별도 임시 DB에서 대화형 `npm run user:add` | 비밀번호 입력 숨김/재입력 확인, 생성 계정 인증 성공과 오입력 거부 확인 |
 | 의존성 | `npm audit` | 초기 검사 발견 0건. 향후 안전 보장이 아님 |
 
 브라우저 이미지와 계정은 합성 fixture다. 실제 Windows 캡처는 파일에 저장하지 않았다. `local/previews/`에는 로그인/대시보드/모바일 UI만 있으며 공개 Git에서 제외한다. 실제 마우스/키 이벤트는 브라우저→서버→테스트 agent까지 검증하고 Windows 주입 구조를 별도 검사했다. 대상 Windows 앱에서 실제 타이핑/클릭한 결과, 모바일 실기기, 게임, 관리자 앱은 아직 미실행이다.
