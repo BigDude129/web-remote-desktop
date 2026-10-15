@@ -4,7 +4,6 @@
 
 목표는 현재 Windows PC의 실제 작업 화면을 맥·아이패드·아이폰·안드로이드의 브라우저에서 조작하는 Jump Desktop 보완 수단이다.
 
-- [조건·요구사항·룰](rules/setting.txt): 사용자가 계속 수정할 기준 문서
 - [구현 가능성·구조·비용·대안](docs/plan.md)
 - [검증 계획과 버그 기록](docs/validation.md)
 - [결정 기록](docs/decisions.md)
@@ -14,12 +13,12 @@
 
 ## 변경 방법
 
-1. rules/setting.txt에서 해당 항목을 수정하거나 새 번호를 추가한다. 기존 번호는 재사용하지 않는다.
+1. 변경 사항에 해당하는 기획·검증 문서를 수정한다.
 2. 확정 / 제안 / 미정 상태를 표시한다. 확정은 요구사항 확정을 뜻하며 구현 완료를 뜻하지 않는다.
 3. 중요한 선택은 docs/decisions.md에 이유와 대안을 남긴다.
 4. CHANGELOG.md에 날짜와 바뀐 ID를 적고 Git 커밋을 만든다.
 
-예: `git add rules/setting.txt CHANGELOG.md` 후 `git commit -m "docs: update R-003 Korean input requirements"`.
+예: `git add docs/plan.md CHANGELOG.md` 후 `git commit -m "docs: update Korean input requirements"`.
 
 버전은 요구 범위가 늘어나면 0.2.0, 표현·오타만 고치면 0.1.1처럼 올린다. 배포 버전은 구현 시작 후 별도로 관리한다. Git은 로컬 이력이며 외부 백업이 아니다.
 
