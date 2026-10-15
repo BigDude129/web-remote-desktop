@@ -1,0 +1,19 @@
+# Secrets and machine-specific runtime state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+secrets/
+local/
+logs/
+recordings/
+screenshots/
+node_modules/
+dist/
+build/
+*.log
+Thumbs.db
+.DS_Store
