@@ -4,6 +4,8 @@
 
 Windows의 현재 콘솔을 공유합니다. Microsoft RDP 프로토콜 구현은 아니며 RDP/Guacamole 어댑터는 확장 후보입니다. 기존 Jump Desktop 보완, 한영 입력, 모바일 조작 목표는 유지합니다.
 
+Windows x64 에이전트는 [최신 릴리즈](https://github.com/BigDude129/web-remote-desktop/releases/latest)에서 ZIP으로 내려받을 수 있습니다. [v0.1.0 배포 검사](https://github.com/BigDude129/web-remote-desktop/actions/runs/38678276170)는 실제 Windows VM 설치·웹 제어 11개 검사를 통과했습니다. 검증 범위와 남은 제약은 [VM 기록](docs/vm-validation.md)에 정리했습니다.
+
 ## 구현 범위
 
 - 웹 로그인/로그아웃, 사용자별 SQLite 기기 목록, 온라인·오프라인·사용 중 상태, 검색과 연결 기록

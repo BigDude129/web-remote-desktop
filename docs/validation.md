@@ -16,8 +16,11 @@
 | 웹 다운로드/고지 | 로그인한 HTTP 클라이언트로 로컬 패키지 다운로드 | 실제 응답 ZIP의 SHA-256과 manifest 일치, `/license`와 `/licenses` 원문 응답 확인 |
 | 최초 계정 생성 | 별도 임시 DB에서 대화형 `npm run user:add` | 비밀번호 입력 숨김/재입력 확인, 생성 계정 인증 성공과 오입력 거부 확인 |
 | VM 도구 준비 | DesktopProbe Release 빌드/TypeScript 및 물리 PC preflight | 빌드 통과. `DESKLINK_VM_TEST=1`이어도 실제 물리 PC를 exit 2로 거부, GUI/OS 입력 없음. 실제 VM 결과는 아래 별도 기록 |
+| 실제 VM 설치·웹 제어 | GitHub `windows-2025`, Windows Server 2025, Chromium, 배포 ZIP의 실제 EXE | [수정 후 실행](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677845353)에서 11개 통과. 다운로드/해시/GUI 로그인/화면/클릭/영문·한글/휠·드래그/modifier/재연결/GUI 로그아웃 및 키 해제 |
 | CI 구성 | actionlint 1.7.12, `.github/workflows/ci.yml` | 지적 사항 없이 통과. 실제 러너 실행 결과를 대신하지 않음 |
-| 릴리즈 게시 차단 | PowerShell 구문 검사 및 실패한 VM 보고서로 게시 스크립트 호출 | 구문 통과. 실패 보고서의 패키지는 GitHub 호출 이전에 거부됨을 확인; 실제 Release 게시 없음 |
+| 릴리즈 게시 차단 | PowerShell 구문 검사 및 실패한 VM 보고서로 게시 스크립트 호출 | 구문 통과. 실패 보고서의 패키지는 GitHub 호출 이전에 거부됨을 확인. 이 차단 검사에서는 실제 게시하지 않음 |
+| 태그 릴리즈 게시 | `v0.1.0`, 커밋 `7bb10c2` | [태그 CI](https://github.com/BigDude129/web-remote-desktop/actions/runs/38678276170)의 서버/브라우저/VM 검사 통과 후 ZIP/manifest/SHA256을 GitHub Release로 게시 |
+| 공개 최신 에이전트 다운로드 | 게시 후 실제 Chromium 웹 로그인/설치 링크 다운로드 | GitHub latest 0.1.0, stale=false. 47,414,661바이트 ZIP의 SHA256이 manifest/GitHub digest와 일치; MIT와 양쪽 .NET runtime 고지 확인 |
 | 의존성 | `npm audit` | 초기 검사 발견 0건. 향후 안전 보장이 아님 |
 
 브라우저 단독 검사의 이미지와 계정은 합성 fixture다. 실제 Windows 캡처는 파일에 저장하지 않았다. `local/previews/`에는 로그인/대시보드/모바일 UI만 있으며 공개 Git에서 제외한다. 실제 마우스/키 이벤트의 Windows 테스트 창 결과는 아래 VM 기록과 구분한다. 일반 사용자 앱의 입력 호환성, 모바일 실기기, 게임, 관리자 앱은 아직 미검증이다.
@@ -32,6 +35,8 @@
 후속 검사에서 Ctrl을 누른 채 두 번 클릭하면 전체 `release`가 두 번 전송되는 문제가 재현됐다. 정상 pointer-up과 예기치 않은 capture 상실을 구분하여 수정했다. 수정 전 신규 브라우저 검사는 예상 0/실제 2로 실패했고, 수정 후 Ctrl 유지와 blur/예기치 않은 capture 상실 해제 검사가 통과했다.
 
 초기 CI의 `--skip-capture` 구성은 D-013에 따라 실제 캡처/VM 웹 제어 검사로 대체했다. 그래픽 세션이 없으면 실패 처리한다. 2026-10-15 쓰기 권한이 부여되어 `fce4226`까지 main 푸시를 완료했다. [첫 CI 실행](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677256982)에서 Ubuntu 서버 18개/브라우저 4개가 통과했다. Windows VM에서는 배포 ZIP 다운로드·실제 GUI 로그인·화면·클릭·영문/한글·휠/드래그·Ctrl 유지/blur·재연결까지 통과했으나 마지막 GUI 로그아웃 호출에서 테스트 도구의 `InvalidOperationException`이 발생해 전체 검사를 실패 처리했다. 최소화 전의 소유 창 handle을 유지하고 로그아웃 전에 창을 복원하도록 도구를 보완했다. 재검증과 게시 결과는 [VM 검증 절차](vm-validation.md)에 이어 기록한다. 실패한 검사를 성공으로 바꾸거나 릴리즈 조건을 완화하지 않는다.
+
+수정 커밋 `7bb10c2`를 main에 푸시한 뒤 [실행 38677845353](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677845353)에서 서버 18개, 브라우저 4개, 실제 Windows VM 11개 검사가 모두 통과했다. GUI 로그아웃 후 웹 종료 표시, 온라인/활성 세션 0, Windows Ctrl/마우스 버튼 해제까지 확인했다. 이 결과는 테스트 창의 입력 검증이며 Windows 11의 일반 앱/모바일/외부망 검증을 대신하지 않는다.
 
 ## 환경 기록
 

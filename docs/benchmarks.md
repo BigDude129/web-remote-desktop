@@ -37,7 +37,13 @@
 | prettier | 3.9.10 | MIT | https://github.com/prettier/prettier |
 | @types/express / node / react / react-dom / ws | 5.0.6 / 24.19.2 / 19.3.0 / 19.3.0 / 8.18.2 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped |
 
-GitHub Actions는 검증 시 확인한 v4 태그의 커밋 SHA로 고정했다. 의존성 업데이트 때 버전, 취약점 검사, 원문 고지를 함께 확인한다. 초기 `npm audit`는 발견 0건이었으며 향후 상태를 보장하지 않는다.
+최초 v0.1.0 CI는 v4 action을 SHA로 고정해 검증했다. 실행 중 나타난 Node 20 지원 종료 경고에 따라 main은 아래 공식 릴리즈의 `action.yml`에서 Node 24 실행 엔진을 확인하고 SHA를 갱신했다. 정확한 SHA와 캐시 비활성화 설정은 `.github/workflows/ci.yml`에 있다. 의존성 업데이트 때 버전, 취약점 검사, 원문 고지를 함께 확인한다. 초기 `npm audit`는 발견 0건이었으며 향후 상태를 보장하지 않는다.
+
+| CI 도구 | 버전 | 라이선스 | 공식 출처 |
+|---|---|---|---|
+| actions/checkout | 7.0.1 | MIT | https://github.com/actions/checkout/releases/tag/v7.0.1 |
+| actions/setup-node | 7.1.0 | MIT | https://github.com/actions/setup-node/releases/tag/v7.1.0 |
+| actions/setup-dotnet | 6.0.0 | MIT | https://github.com/actions/setup-dotnet/releases/tag/v6.0.0 |
 
 ## 로컬 검증 도구
 

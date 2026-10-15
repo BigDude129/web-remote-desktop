@@ -2,6 +2,8 @@
 
 2026-10-15 / D-012 / 초기 버전 0.1.0. 브라우저 설치 안내와 에이전트 업데이트 확인은 같은 공개 GitHub Release 정보를 사용한다.
 
+첫 공개 배포는 [v0.1.0](https://github.com/BigDude129/web-remote-desktop/releases/tag/v0.1.0), 소스 커밋 `7bb10c2`다. [태그 CI 38678276170](https://github.com/BigDude129/web-remote-desktop/actions/runs/38678276170)에서 서버/브라우저와 실제 Windows VM 설치·제어 검사를 모두 통과한 ZIP을 게시했다. 이후 main의 검증 문서나 CI 설정 변경이 이미 게시된 ZIP을 바꾸지는 않는다.
+
 ## 버전 규칙
 
 `package.json.version`이 기준이다. `npm run version:set -- X.Y.Z`는 package.json, package-lock.json, `agent/Directory.Build.props`를 함께 갱신한다. 다운그레이드/같은 버전/잘못된 SemVer를 거부한다. 에이전트는 어셈블리 버전, 웹/서버는 package.json에서 읽는다. Windows manifest의 assemblyIdentity 1.0.0.0은 호환성 manifest ID이며 제품 버전으로 표시하지 않는다.

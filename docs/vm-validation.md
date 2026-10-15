@@ -56,6 +56,14 @@ npm run test:vm
 
 2026-10-15 쓰기 권한 부여 후 `fce4226`까지 main 푸시를 완료했다. [첫 실행 38677256982](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677256982)의 Windows VM에서 사전 조건, 웹 로그인/ZIP 다운로드·해시, 설치된 agent GUI 로그인, 실제 화면, 클릭, 영문/편집 단축키, 한글, 휠/드래그, Ctrl 유지/blur 해제, 재연결 10개 검사가 통과했다. 마지막 agent GUI 로그아웃을 최소화 상태에서 호출하자 테스트 도구가 `InvalidOperationException`으로 실패했다. 제품 로그아웃 결과를 검증하기 전에 중단됐으므로 전체 결과는 실패다.
 
-후속 수정은 소유 agent의 창 handle을 시작 시 보관하고 로그아웃 호출 전에 창을 복원한다. 오류에는 입력값이나 화면 대신 고정된 단계 이름을 추가한다. 수정 후 실제 VM 결과를 다시 확인하며 릴리즈 차단 조건은 유지한다. 로컬 도구 빌드/타입 검사와 물리 PC 실행 거부는 별도로 통과했다.
+후속 수정은 소유 agent의 창 handle을 시작 시 보관하고 로그아웃 호출 전에 창을 복원한다. 오류에는 입력값이나 화면 대신 고정된 단계 이름을 추가했다. 수정 후 아래 실제 VM 재검증을 수행했으며 릴리즈 차단 조건은 유지했다. 로컬 도구 빌드/타입 검사와 물리 PC 실행 거부는 별도로 통과했다.
+
+[재검증 38677845353](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677845353), 커밋 `7bb10c2b8a1d8ff2d32ec600579f0ab4f7f820de`: 2026-10-15 03:48 UTC에 11개 검사가 모두 통과했다. 러너는 Windows Server 2025 / 이미지 `windows-2025-vs2026`이다. 마지막 GUI 로그아웃은 웹 종료 표시와 기기 오프라인, 활성 세션 제거, Windows 입력 해제를 실제로 확인했다. 서버 18개/브라우저 4개 검사도 같은 실행에서 통과했다.
+
+이 main 실행에서만 검증한 ZIP의 SHA-256은 `ea34a523e04e4559d1a8d5e634053bb7efa2635bdbeaa0541dc7cdb3fd9319ae`이다. 릴리즈 태그는 별도 Windows VM에서 패키지를 다시 만들고 동일한 11개 검사를 통과한 파일을 게시한다. ZIP 생성 시각 등이 달라질 수 있으므로 공개 릴리즈의 최종 hash는 해당 `agent-release.json`/`SHA256SUMS.txt`로 확인한다.
+
+[태그 실행 38678276170](https://github.com/BigDude129/web-remote-desktop/actions/runs/38678276170)도 서버/브라우저/Windows VM 검사를 모두 통과하고 [v0.1.0](https://github.com/BigDude129/web-remote-desktop/releases/tag/v0.1.0)을 공개/latest로 게시했다. 최종 ZIP은 `DeskLink.Agent-0.1.0-win-x64.zip`, 47,414,661바이트, SHA-256 `7b109c1778eb97c9777a76dc4b6331a57134d8ea2fc4d0a2d1d763563c469c27`이다. ZIP, `agent-release.json`, `SHA256SUMS.txt` 3개 자산이 공개되어 있다.
+
+게시 후 2026-10-15 03:55 UTC에 별도 임시 서버/계정과 실제 Chromium으로 웹 로그인 → 기기 연결 → 공개 ZIP 다운로드를 다시 수행했다. latest API가 `source=github`, `version=0.1.0`, `stale=false`를 반환하고 실제 다운로드의 크기/hash가 manifest 및 GitHub asset digest와 일치했다. 내려받은 ZIP에서 프로젝트 MIT와 .NETCore/WindowsDesktop 원문 고지도 확인했다. 이 후속 검사는 공개 배포 경로 검증이며 물리 PC에서 원격 입력을 실행하지 않았다. 다운로드와 보고서는 Git 제외 경로 `local/release-verification/`에 둔다.
 
 공개 저장소의 표준 러너 실행 시간은 [GitHub 과금 안내](https://docs.github.com/en/billing/concepts/product-billing/github-actions)에 따라 무료다. 계정 차단/저장공간/결제 상태는 별도 조건이며 여기서 확인한 것으로 간주하지 않는다. 비공개 전환 시 workflow는 실행을 건너뛰며 비용 정책 재검토가 필요하다.

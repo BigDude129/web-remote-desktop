@@ -56,6 +56,10 @@ rules/rules.md, AGENTS.md, 실행/아키텍처/프로토콜/벤치마킹/검증/
 
 사용자가 Actions 한도 소진 가능성을 알려왔으며 공개 저장소/표준 러너의 실행 시간 무료 정책을 확인한 뒤 계속 진행하도록 요청했다. 계정 전체의 저장공간/결제 상태를 확인했다는 뜻은 아니다. 기존 D-012의 job 간 artifact 전달을 없애고 Windows VM 한 곳에서 패키징→웹 다운로드/설치→실제 제어 검증→동일 ZIP 게시를 수행한다. Actions 캐시/아티팩트 업로드 없이 job summary/로그에 결과를 남긴다. 비공개 저장소에서는 자동 검사 실행을 건너뛰고 비용 정책을 재검토한다. [GitHub 과금 기준](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
+## D-015 / 2026-10-15 / 구현 선택: CI 실행 엔진 지원 갱신
+
+첫 main/태그 CI는 모두 검증을 통과했으나 기존 v4 action의 Node 20 실행 엔진이 Node 24로 강제 전환된다는 경고가 발생했다. 공식 릴리즈와 `action.yml`을 확인하여 checkout 7.0.1, setup-node 7.1.0, setup-dotnet 6.0.0의 Node 24 지원 버전을 정확한 SHA로 고정한다. setup-node의 자동 패키지 캐시 기본값을 검토하고 `package-manager-cache: false`, .NET `cache: false`를 명시한다. checkout의 자격증명 보관도 두 job 모두 끈다. 이미 게시한 v0.1.0은 검증된 기존 태그/ZIP을 유지하며 이 CI 개선을 소급하여 바이너리를 교체하지 않는다. 출처/라이선스는 benchmarks에 기록한다.
+
 ## 후속 결정 양식
 
 ID / 날짜 / 상태 / 관련 C·R·G 번호 / 결정 내용 / 이유 / 비교 대안 / 영향 / 재검토 조건
