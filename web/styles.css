@@ -1926,3 +1926,23 @@ h3 {
   color: #68490b;
   font-size: 14px;
 }
+.keyboard-settings {
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.keyboard-settings summary {
+  cursor: pointer;
+}
+.keyboard-settings label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.keyboard-settings input {
+  width: auto;
+}
+.keyboard-settings p {
+  max-width: 850px;
+  line-height: 1.6;
+}

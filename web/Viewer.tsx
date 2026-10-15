@@ -39,6 +39,18 @@ export function Viewer({
   const [hasFrame, setHasFrame] = useState(false);
   const [text, setText] = useState('');
   const [showText, setShowText] = useState(false);
+  const [capsAsHangul, setCapsAsHangul] = useState(() => {
+    try {
+      const saved = localStorage.getItem('desklink.capsAsHangul');
+      if (saved !== null) return saved === 'true';
+    } catch {
+      /* Storage may be unavailable in private browsing. */
+    }
+    return (
+      /iPad/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+  });
   const lastMove = useRef(0);
   const pressedPointer = useRef<number | null>(null);
 
@@ -168,6 +180,12 @@ export function Viewer({
     });
   }
   function key(event: React.KeyboardEvent, down: boolean) {
+    if (capsAsHangul && event.code === 'CapsLock') {
+      event.preventDefault();
+      // Apple keyboards may omit keyup: send one complete toggle per non-repeat keydown.
+      if (down && !event.repeat) special('Lang1');
+      return;
+    }
     if (event.nativeEvent.isComposing || event.code === 'Process') return;
     if (keyCodes.includes(event.code as (typeof keyCodes)[number])) {
       event.preventDefault();
@@ -306,6 +324,31 @@ export function Viewer({
           </button>
         </form>
       )}
+      <details className="keyboard-settings">
+        <summary>키보드 설정 · iPad 한/영</summary>
+        <label>
+          <input
+            type="checkbox"
+            checked={capsAsHangul}
+            onChange={(event) => {
+              release();
+              setCapsAsHangul(event.target.checked);
+              try {
+                localStorage.setItem('desklink.capsAsHangul', String(event.target.checked));
+              } catch {
+                /* Keep the setting for this session when storage is unavailable. */
+              }
+            }}
+          />
+          Caps Lock을 원격 PC 한/영키로 사용
+        </label>
+        <p>
+          원격 화면을 터치해 키보드 초점을 맞추세요. iPad에서는 입력 언어를 영어로 두고, 설정 → 일반
+          → 키보드 → 하드웨어 키보드에서 Caps Lock으로 언어 전환을 끄세요. iPad가 먼저 처리한 키는
+          이 페이지에 전달되지 않을 수 있습니다. 동작하지 않으면 아래 한/영 버튼이나 문자열 입력을
+          사용하세요.
+        </p>
+      </details>
       <footer className="viewer-footer">
         <span>
           <i className={ready ? 'status-dot' : 'status-dot offline'} />{' '}

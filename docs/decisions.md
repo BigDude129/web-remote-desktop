@@ -74,4 +74,10 @@ rules/rules.md, AGENTS.md, 실행/아키텍처/프로토콜/벤치마킹/검증/
 
 ## 후속 결정 양식
 
+### 2026-10-15 / iPad 키보드 및 게임 후속 진단
+
+사용자는 iPad 연결 끊김이 크게 줄었지만 게임 실행 중 문제와 Caps Lock 한영 전환 실패가 남았다고 보고했다. 게임 테스트 감사 기록은 `input.blocked.move.0`으로, SetCursorPos 실패를 확인했으나 원인이나 캡처 정상 여부를 확정하지 않는다. 게임과 agent의 권한 차이는 조사 대상이며 관리자 실행이나 게임 보안 우회는 자동 적용하지 않는다.
+
+웹은 iPad 감지 시 Caps Lock을 기존 Lang1 한 번 누름/해제로 변환한다. keyup 누락에 대비해 keydown에서 쌍을 보내고 repeat/keyup은 무시한다. 다른 기기는 기본 매핑을 유지하며 사용자가 옵션을 바꿀 수 있다. 설정은 브라우저 localStorage에만 저장하고 저장 불가 시 해당 세션에 적용한다. 원격 canvas에만 적용해 로컬 문자열 조합을 간섭하지 않는다. iPadOS가 선처리한 키는 복구할 수 없으므로 OS 설정과 화면 한/영 버튼을 안내한다. [Apple 설정 안내](https://support.apple.com/en-euro/guide/ipad/ipaddd28d7ed/ipados).
+
 ID / 날짜 / 상태 / 관련 C·R·G 번호 / 결정 내용 / 이유 / 비교 대안 / 영향 / 재검토 조건

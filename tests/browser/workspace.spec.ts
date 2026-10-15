@@ -271,3 +271,52 @@ test('held modifier survives normal pointer release and is released on blur', as
   await page.mouse.up();
   await page.keyboard.up('Control');
 });
+test('iPad Caps Lock maps to one complete Hangul toggle and can be disabled', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
+    Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+  });
+  const registered = await runtime.agentLogin();
+  const agent = runtime.agentSocket(registered.token);
+  await agent.json();
+  await signIn(page);
+  await page.getByRole('button', { name: '원격 연결', exact: true }).click();
+  const start = await agent.json();
+  agent.send({ type: 'ready', sessionId: start.sessionId });
+  const canvas = page.locator('canvas');
+  await expect(canvas).toHaveAttribute('tabindex', '0');
+  await page.getByText('키보드 설정 · iPad 한/영', { exact: true }).click();
+  const setting = page.getByLabel('Caps Lock을 원격 PC 한/영키로 사용');
+  await expect(setting).toBeChecked();
+  const keys = () =>
+    agent.messages
+      .map((item) => JSON.parse(item.data.toString()).input)
+      .filter((input) => input?.kind === 'key');
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock', key: 'CapsLock' });
+  await expect.poll(() => keys().length).toBe(2);
+  expect(keys()).toEqual([
+    { kind: 'key', code: 'Lang1', down: true },
+    { kind: 'key', code: 'Lang1', down: false },
+  ]);
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock', repeat: true });
+  await canvas.dispatchEvent('keyup', { code: 'CapsLock' });
+  // An ordinary key is a relay barrier for the negative repeat/keyup assertion.
+  await canvas.dispatchEvent('keydown', { code: 'KeyA' });
+  await expect.poll(() => keys().length).toBe(3);
+  expect(keys()[2].code).toBe('KeyA');
+  await setting.uncheck();
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock' });
+  await canvas.dispatchEvent('keyup', { code: 'CapsLock' });
+  await expect.poll(() => keys().length).toBe(5);
+  expect(
+    keys()
+      .slice(-2)
+      .map((input) => input.code),
+  ).toEqual(['CapsLock', 'CapsLock']);
+  expect(await page.evaluate(() => localStorage.getItem('desklink.capsAsHangul'))).toBe('false');
+  await page.getByRole('button', { name: '문자열 입력' }).click();
+  await page.getByLabel('한글 · 모바일 입력').dispatchEvent('keydown', { code: 'CapsLock' });
+  await canvas.dispatchEvent('keydown', { code: 'KeyB' });
+  await expect.poll(() => keys().length).toBe(6);
+  expect(keys()[5].code).toBe('KeyB');
+});

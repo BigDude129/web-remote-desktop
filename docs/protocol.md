@@ -100,3 +100,6 @@ type RemoteInput =
 규약 변경 시 서버, 웹, 에이전트, 통합 테스트, 이 문서/CHANGELOG를 함께 갱신한다. 호환성이 깨지면 protocolVersion을 올리고 구버전 거부/업그레이드를 명시한다.
 
 릴리즈 cache/실패/fallback/무결성 의미는 [릴리즈 절차](releases.md)에 기록한다. 공개 릴리즈 조회는 로그인이나 캡처 활성화를 요구하지 않는다. 웹과 agent의 인증 토큰은 GitHub로 전송하지 않는다.
+# iPad Caps Lock 웹 매핑 (0.1.1 파일럿 후속)
+
+프로토콜 변경 없음. 옵션 활성화 시 원격 canvas의 CapsLock keydown을 기존 `key/Lang1/down:true`, `key/Lang1/down:false`로 변환한다. repeat 및 keyup은 추가 전송하지 않는다. OS가 웹에 키를 전달하지 않는 상황과 Windows IME의 실제 상태는 이 메시지로 판별할 수 없다.
