@@ -5,7 +5,7 @@
 ## 시작 위치
 
 1. README의 로컬 실행 → 계정 생성 → Windows agent 로그인으로 실제 기기를 연결한다.
-2. rules/rules.md와 decisions의 D-006~015로 현재 확정 범위와 구현 선택을 확인한다.
+2. rules/rules.md와 decisions의 D-006~016으로 현재 확정 범위와 구현 선택을 확인한다.
 3. architecture/protocol 문서로 auth, owner, session 수명주기를 파악한다.
 4. validation의 자동 검사와 미검증 실기기를 구분한다. 자동 통과를 실제 게임/모바일 호환으로 확대 해석하지 않는다.
 5. 버전업 시 releases 문서와 licenses 고지를 함께 갱신한다.
@@ -14,6 +14,8 @@
 2026-10-15 `7bb10c2`의 [GitHub CI](https://github.com/BigDude129/web-remote-desktop/actions/runs/38677845353)가 서버 18개·브라우저 4개·실제 Windows VM 11개 검사를 통과했다. 최초 VM 실행의 최소화 창 로그아웃 검사 실패와 수정 내역은 validation/vm-validation에 보존했다. 아래 실기기·네트워크·운영 기능은 이 VM 검사와 별도로 남은 작업이다.
 
 ## 파일별 책임
+
+2026-10-15 후속 웹 변경: 사용자 요청으로 main을 먼저 pull한 뒤 전체 글자를 확대했다. `web/styles.css`의 공통 rem 크기와 RULE-021을 기준으로 이후 화면도 작성한다. 본문/입력/주요 버튼 16px, 보조 글자 14px는 기본 브라우저 글자 16px 기준이며 모바일에서도 축소하지 않는다. 원격 canvas 내용은 호스트 화면 그대로다. 서버 검사 18개, 브라우저 검사 4개와 54개 화면/크기 조합 확인을 통과했으며 자세한 조건은 validation의 웹 글자 확대 항목에 있다. 이 후속 변경도 사용자의 명시적 main 커밋·푸시 요청에 따른다.
 
 | 영역 | 주요 파일 | 변경 시 함께 볼 곳 |
 |---|---|---|
