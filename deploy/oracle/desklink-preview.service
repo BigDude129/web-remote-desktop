@@ -1,0 +1,19 @@
+[Unit]
+Description=DeskLink temporary HTTPS preview tunnel
+After=network-online.target desklink-pilot.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/desklink-pilot
+Environment=DESKLINK_TUNNEL_BINARY=%h/.local/bin/desklink-cloudflared
+Environment=DESKLINK_PREVIEW_PORT=3230
+ExecStart=%h/.local/share/desklink-node/bin/node scripts/oracle-preview.mjs
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=20
+MemoryMax=128M
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target
