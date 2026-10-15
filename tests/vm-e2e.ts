@@ -57,7 +57,7 @@ class Probe {
         this.pending.delete(response.id);
         clearTimeout(waiter.timer);
         if (response.ok) waiter.resolve(response.result);
-        else waiter.reject(new Error(`Desktop probe: ${response.error}`));
+        else waiter.reject(new Error(`Desktop probe: ${response.phase}: ${response.error}`));
       } catch {
         this.rejectAll(new Error('Invalid desktop probe response'));
       }

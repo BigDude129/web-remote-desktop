@@ -67,7 +67,7 @@ internal static class Program
                 catch (Exception error)
                 {
                     // Never echo a command: start-agent contains disposable credentials.
-                    Console.WriteLine(JsonSerializer.Serialize(new { id, ok = false, error = error.GetType().Name }));
+                    Console.WriteLine(JsonSerializer.Serialize(new { id, ok = false, error = error.GetType().Name, phase = agent.Phase }));
                 }
             }
         }
@@ -78,6 +78,8 @@ internal static class Program
 internal sealed class AgentUi : IDisposable
 {
     private Process? process;
+    private IntPtr window;
+    internal string Phase { get; private set; } = "not-started";
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr SendMessage(IntPtr window, uint message, IntPtr parameter, string text);
@@ -87,9 +89,8 @@ internal sealed class AgentUi : IDisposable
         get
         {
             if (process is null || process.HasExited) throw new InvalidOperationException("Agent exited");
-            process.Refresh();
-            if (process.MainWindowHandle == IntPtr.Zero) throw new InvalidOperationException("Agent window unavailable");
-            return AutomationElement.FromHandle(process.MainWindowHandle);
+            if (window == IntPtr.Zero) throw new InvalidOperationException("Agent window unavailable");
+            return AutomationElement.FromHandle(window);
         }
     }
 
@@ -118,6 +119,7 @@ internal sealed class AgentUi : IDisposable
 
     internal void Start(JsonElement request)
     {
+        Phase = "start-agent";
         if (process is not null) throw new InvalidOperationException("Agent already started");
         var path = Path.GetFullPath(request.GetProperty("path").GetString()!);
         var root = Path.GetFullPath("local/vm-e2e") + Path.DirectorySeparatorChar;
@@ -128,10 +130,13 @@ internal sealed class AgentUi : IDisposable
         var wait = Stopwatch.StartNew();
         while (process.MainWindowHandle == IntPtr.Zero && !process.HasExited && wait.Elapsed < TimeSpan.FromSeconds(20))
         { Thread.Sleep(100); process.Refresh(); }
+        window = process.MainWindowHandle;
+        Phase = "fill-agent-login";
         Fill("ServerAddress", "서버 주소", request.GetProperty("origin").GetString()!);
         Fill("Username", "계정", request.GetProperty("username").GetString()!);
         Fill("Password", "비밀번호", request.GetProperty("password").GetString()!);
         Fill("DeviceName", "기기 이름", "Windows VM validation");
+        Phase = "invoke-agent-login";
         ((InvokePattern)Control("AllowRemote", "로그인하고 원격 허용", ControlType.Button).GetCurrentPattern(InvokePattern.Pattern)).Invoke();
         wait.Restart();
         while (!Control("StopRemote", "원격 허용 중단 / 로그아웃", ControlType.Button).Current.IsEnabled)
@@ -139,11 +144,28 @@ internal sealed class AgentUi : IDisposable
             if (wait.Elapsed > TimeSpan.FromSeconds(20)) throw new TimeoutException("Agent GUI login failed");
             Thread.Sleep(100);
         }
+        Phase = "minimize-agent";
         ((WindowPattern)Root.GetCurrentPattern(WindowPattern.Pattern)).SetWindowVisualState(WindowVisualState.Minimized);
+        Phase = "agent-online";
     }
 
-    internal void SignOut() => ((InvokePattern)Control("StopRemote", "원격 허용 중단 / 로그아웃", ControlType.Button)
-        .GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+    internal void SignOut()
+    {
+        // Minimized windows can hide controls from UI Automation or reject invocation.
+        // Keep the handle captured from our own process and restore before finding the button.
+        Phase = "restore-agent";
+        ((WindowPattern)Root.GetCurrentPattern(WindowPattern.Pattern)).SetWindowVisualState(WindowVisualState.Normal);
+        Phase = "invoke-agent-sign-out";
+        var button = Control("StopRemote", "원격 허용 중단 / 로그아웃", ControlType.Button);
+        var wait = Stopwatch.StartNew();
+        while (button.Current.IsOffscreen || !button.Current.IsEnabled)
+        {
+            if (wait.Elapsed > TimeSpan.FromSeconds(5)) throw new TimeoutException("Agent sign-out button unavailable");
+            Thread.Sleep(100);
+        }
+        ((InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+        Phase = "agent-sign-out-requested";
+    }
 
     public void Dispose()
     {
@@ -156,6 +178,6 @@ internal sealed class AgentUi : IDisposable
                 if (!process.WaitForExit(5000)) process.Kill(entireProcessTree: true);
             }
         }
-        finally { process.Dispose(); process = null; }
+        finally { process.Dispose(); process = null; window = IntPtr.Zero; }
     }
 }
