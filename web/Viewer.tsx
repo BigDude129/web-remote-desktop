@@ -38,6 +38,7 @@ export function Viewer({
   const [text, setText] = useState('');
   const [showText, setShowText] = useState(false);
   const lastMove = useRef(0);
+  const pressedPointer = useRef<number | null>(null);
 
   function send(input: RemoteInput) {
     if (
@@ -47,7 +48,10 @@ export function Viewer({
     )
       ws.current.send(JSON.stringify(input));
   }
-  const release = () => send({ kind: 'release' });
+  const release = () => {
+    pressedPointer.current = null;
+    send({ kind: 'release' });
+  };
 
   useEffect(() => {
     let disposed = false;
@@ -209,6 +213,7 @@ export function Viewer({
             if (!ready) return;
             event.preventDefault();
             event.currentTarget.focus();
+            pressedPointer.current = event.pointerId;
             event.currentTarget.setPointerCapture(event.pointerId);
             position(event, true);
             send({
@@ -224,11 +229,14 @@ export function Viewer({
               button: event.button === 2 ? 'right' : event.button === 1 ? 'middle' : 'left',
               down: false,
             });
+            pressedPointer.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);
           }}
           onPointerCancel={release}
-          onLostPointerCapture={release}
+          onLostPointerCapture={(event) => {
+            if (pressedPointer.current === event.pointerId) release();
+          }}
         />
         {(!hasFrame || ended) && (
           <div className="screen-message">

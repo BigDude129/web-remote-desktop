@@ -27,15 +27,17 @@ git tag -a v0.1.1 -m "DeskLink v0.1.1"
 git push origin v0.1.1
 ```
 
-태그는 릴리즈하려는 검증된 main 커밋에 생성한다. 서버/웹 체크가 태그와 코드 버전 일치를 검사한다. workflow는 Ubuntu의 서버/웹/브라우저 테스트와 Windows의 build/self-test/패키지를 완료해야 게시 job을 실행한다.
+태그는 릴리즈하려는 검증된 main 커밋에 생성한다. 서버/웹 체크가 태그와 코드 버전 일치를 검사한다. workflow는 Ubuntu의 서버/웹/브라우저 테스트 이후 Windows VM에서 build/self-test/패키지 생성과 실제 웹 제어 검사를 수행한다. Windows VM 검증이 실패하면 게시하지 않는다.
 
-게시 job은 SHA256을 검사한 뒤 draft Release를 만들고 아래 자산을 모두 올린 다음 공개/latest로 지정한다. 실패하면 불완전한 draft가 latest로 노출되지 않는다. 재실행은 같은 draft만 갱신하며 이미 공개된 릴리즈를 덮어쓰지 않는다. 릴리즈 노트 파일이 없으면 게시를 실패시킨다.
+Windows job의 마지막 단계는 `scripts/publish-release.ps1`을 실행한다. VM 검증 보고서의 성공 여부·소스 커밋·앱 버전·ZIP SHA256을 현재 배포 대상과 비교한 뒤 draft Release를 만들고 아래 자산을 모두 올린 다음 공개/latest로 지정한다. 실패하면 불완전한 draft가 latest로 노출되지 않는다. 재실행은 같은 draft만 갱신하며 이미 공개된 릴리즈를 덮어쓰지 않는다. 릴리즈 노트 파일이 없으면 게시를 실패시킨다.
 
 - `DeskLink.Agent-X.Y.Z-win-x64.zip`
 - `agent-release.json`: version, protocolVersion, platform, assetName, sha256, size
 - `SHA256SUMS.txt`
 
-ZIP에는 자체 포함 EXE와 프로젝트 MIT/사용 runtime pack 고지/업데이트 실행 안내가 포함된다. 서명된 설치기/자동 파일 교체는 아직 제공하지 않는다. GitHub Actions artifact 보존은 7일, 정식 배포는 Release 자산을 사용한다.
+ZIP에는 자체 포함 EXE와 프로젝트 MIT/사용 runtime pack 고지/업데이트 실행 안내가 포함된다. 서명된 설치기/자동 파일 교체는 아직 제공하지 않는다. Actions 캐시/아티팩트를 업로드하지 않고 같은 VM 안의 검증된 파일을 Release 자산으로 직접 게시한다. 결과는 Actions job summary와 로그에 남긴다. 상세 검사와 한계는 [VM 검증](vm-validation.md)에 기록한다.
+
+자동 CI는 공개 저장소의 표준 `ubuntu-24.04`/`windows-2025` 러너만 사용한다. 저장소를 비공개로 바꾸면 job이 건너뛰어지고 릴리즈도 게시되지 않는다. 비용 정책을 먼저 재검토한 후 workflow 조건을 변경한다. 실행 시간·저장공간·계정 제한은 서로 다른 조건이며 유료 러너나 예산 상향은 자동으로 수행하지 않는다.
 
 ## 서버의 최신 버전 조회
 

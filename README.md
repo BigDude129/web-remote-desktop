@@ -65,6 +65,8 @@ npm run format:check
 
 검증 범위와 미실행 실기기 시나리오는 [검증 기록](docs/validation.md)을 확인하세요. 입력 이벤트 생성·중계 통과와 대상 앱에서의 실제 입력 성공은 별개입니다.
 
+배포 ZIP을 가상 PC에 설치해 실제 GUI·웹·Windows 입력까지 확인하는 [VM 검증 절차](docs/vm-validation.md)도 제공합니다. `npm run test:vm`은 폐기 가능한 Windows VM에서만 실행되며 물리 작업 PC에서는 거부됩니다. CI는 공개 저장소의 표준 러너를 사용하고 Actions 캐시/아티팩트 저장은 사용하지 않습니다.
+
 ## 구조와 협업
 
 ```text
@@ -73,6 +75,7 @@ server/                      Express API, 인증, SQLite, WebSocket 중계
 shared/                      입력 메시지 스키마와 공유 타입
 agent/DeskLink.Agent/         .NET 10 Windows GUI, 캡처, SendInput
 agent/DeskLink.Agent.Integration/  실제 에이전트 통합 테스트 호스트
+agent/DeskLink.DesktopProbe/   폐기 가능한 VM 전용 GUI/Windows 입력 검증 도구
 tests/                       API/중계/브라우저/네이티브 검증
 scripts/                     Windows 패키지 생성
 rules/rules.md               신규 작업 규칙의 기준 문서

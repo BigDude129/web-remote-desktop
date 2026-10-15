@@ -77,6 +77,8 @@ type RemoteInput =
 
 키 목록은 `shared/protocol.ts`의 `keyCodes`, 네이티브는 `NativeDesktop.Key`를 함께 갱신한다. 키 반복을 허용한다. 문자열은 Unicode down/up 쌍이며 OS 클립보드를 변경하지 않는다. 미지정 속성, 범위 밖 좌표, 미지원 키, binary viewer 입력을 거부한다.
 
+정상적인 pointer-up은 해당 마우스 버튼만 해제하고, 계속 누르고 있는 Ctrl/Shift/Alt는 유지한다. 포커스 상실, pointer cancel, 버튼을 누른 상태에서의 예기치 않은 pointer capture 상실에는 `release`로 모든 입력을 해제한다. 메시지 형식과 protocolVersion은 동일하다.
+
 ## 상한과 종료
 
 - WS hard cap 2 MiB; agent JSON 4,096자, viewer JSON 16,384자 이내 + 필드별 스키마 상한.

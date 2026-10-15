@@ -8,13 +8,16 @@
 |---|---|---|
 | 타입/웹 빌드 | Node 24.20.0, TypeScript 5.9.3, Vite 7.3.7 | 통과; 실행용 정적 자산 생성 |
 | 서버/릴리즈 통합 | `npm test` | 18개 통과. 인증/소유권/CSRF/WS Origin/화면·한글 중계/철회/만료/오프라인·중복/입력/로그인 제한/DB/heartbeat + 릴리즈 검증·캐시·실패·로컬 hash·버전 비교 |
-| 브라우저 | Playwright 1.64.1 Chromium, 1440×1000 / 390×844 | 3개 통과. 로그인 실패/성공/로그아웃, 빈 목록/설치 안내, 검색/상태, canvas WS 렌더링, 포인터 중앙 좌표/버튼/휠/키/한글 중계, 모바일 overflow |
+| 브라우저 | Playwright 1.64.1 Chromium, 1440×1000 / 390×844 | 4개 통과. 로그인 실패/성공/로그아웃, 빈 목록/설치 안내, 검색/상태, canvas WS 렌더링, 포인터 좌표/버튼/휠/키/한글 중계, 모바일 overflow, Ctrl+클릭 유지 및 blur/예기치 않은 capture 상실 시 해제 |
 | Windows build | .NET SDK 10.0.402, Release | 경고/오류 0 |
 | agent self-test | Win32 INPUT ABI, 키 매핑/해제 flags, UTF-16 한글/보충 문자, HTTP 정책, 실제 기본 화면 JPEG | 통과. 화면은 메모리에서만 처리. 글로벌 OS 입력은 주입하지 않음 |
 | 실제 native 중계 | `npm run test:native`, 임시 loopback 서버/테스트 계정 | agent 로그인 → 온라인 → 실제 JPEG → 종료 → 두 번째 세션/화면 → agent 로그아웃/세션 종료 통과 |
 | Windows 패키지 | self-contained win-x64 publish | versioned ZIP, SHA256, manifest, MIT/.NET 원문 고지 생성 |
 | 웹 다운로드/고지 | 로그인한 HTTP 클라이언트로 로컬 패키지 다운로드 | 실제 응답 ZIP의 SHA-256과 manifest 일치, `/license`와 `/licenses` 원문 응답 확인 |
 | 최초 계정 생성 | 별도 임시 DB에서 대화형 `npm run user:add` | 비밀번호 입력 숨김/재입력 확인, 생성 계정 인증 성공과 오입력 거부 확인 |
+| VM 도구 준비 | DesktopProbe Release 빌드/TypeScript 및 물리 PC preflight | 빌드 통과. `DESKLINK_VM_TEST=1`이어도 실제 물리 PC를 exit 2로 거부, GUI/OS 입력 없음. 실제 VM 설치·제어는 아직 미실행 |
+| CI 구성 | actionlint 1.7.12, `.github/workflows/ci.yml` | 지적 사항 없이 통과. 실제 러너 실행 결과를 대신하지 않음 |
+| 릴리즈 게시 차단 | PowerShell 구문 검사 및 실패한 VM 보고서로 게시 스크립트 호출 | 구문 통과. 실패 보고서의 패키지는 GitHub 호출 이전에 거부됨을 확인; 실제 Release 게시 없음 |
 | 의존성 | `npm audit` | 초기 검사 발견 0건. 향후 안전 보장이 아님 |
 
 브라우저 이미지와 계정은 합성 fixture다. 실제 Windows 캡처는 파일에 저장하지 않았다. `local/previews/`에는 로그인/대시보드/모바일 UI만 있으며 공개 Git에서 제외한다. 실제 마우스/키 이벤트는 브라우저→서버→테스트 agent까지 검증하고 Windows 주입 구조를 별도 검사했다. 대상 Windows 앱에서 실제 타이핑/클릭한 결과, 모바일 실기기, 게임, 관리자 앱은 아직 미실행이다.
@@ -26,7 +29,9 @@
 - session stop 시 capture token으로 진행 중 WS send를 취소하면 agent 소켓까지 중단될 수 있음 → 연결 생명주기와 제한된 전송 timeout 사용, 실제 두 번째 연결 검사 통과.
 - 런타임 라이선스는 NuGet 일반 libraries가 아닌 framework downloadDependencies에 기록됨 → 실제 고정 runtime pack 버전을 추적하여 고지 포함, 누락 시 패키지 생성 차단.
 
-CI Windows self-test는 호스팅 runner의 대화형 화면이 보장되지 않아 `--skip-capture`를 명시한다. 로컬에서는 실제 화면 캡처를 수행했다. CI 원격 실행, GitHub Release 게시, 실 다운로드 완료 상태는 해당 커밋/Actions run/Release에서 별도로 확인한다. 로컬 검증을 원격 게시 완료로 기록하지 않는다.
+후속 검사에서 Ctrl을 누른 채 두 번 클릭하면 전체 `release`가 두 번 전송되는 문제가 재현됐다. 정상 pointer-up과 예기치 않은 capture 상실을 구분하여 수정했다. 수정 전 신규 브라우저 검사는 예상 0/실제 2로 실패했고, 수정 후 Ctrl 유지와 blur/예기치 않은 capture 상실 해제 검사가 통과했다.
+
+초기 CI의 `--skip-capture` 구성은 D-013에 따라 실제 캡처/VM 웹 제어 검사로 대체했다. 그래픽 세션이 없으면 실패 처리한다. [VM 검증 절차](vm-validation.md)의 실제 실행은 아직 미완료이며 GitHub 쓰기 권한이 준비된 후 확인해야 한다. CI 원격 실행, GitHub Release 게시, 실 다운로드 완료 상태는 해당 커밋/Actions run/Release에서 별도로 확인한다. 로컬 검증을 원격 게시 완료로 기록하지 않는다.
 
 ## 환경 기록
 

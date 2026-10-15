@@ -6,12 +6,12 @@ namespace DeskLink.Agent;
 
 internal sealed class AgentForm : Form
 {
-    private readonly TextBox address = new() { Text = "http://localhost:3000" };
-    private readonly TextBox username = new();
-    private readonly TextBox password = new() { UseSystemPasswordChar = true };
-    private readonly TextBox deviceName = new() { Text = Environment.MachineName };
-    private readonly Button login = new() { Text = "로그인하고 원격 허용", BackColor = Color.FromArgb(64, 93, 230), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-    private readonly Button stop = new() { Text = "원격 허용 중단 / 로그아웃", Enabled = false };
+    private readonly TextBox address = new() { Name = "ServerAddress", Text = "http://localhost:3000" };
+    private readonly TextBox username = new() { Name = "Username" };
+    private readonly TextBox password = new() { Name = "Password", UseSystemPasswordChar = true };
+    private readonly TextBox deviceName = new() { Name = "DeviceName", Text = Environment.MachineName };
+    private readonly Button login = new() { Name = "AllowRemote", Text = "로그인하고 원격 허용", BackColor = Color.FromArgb(64, 93, 230), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+    private readonly Button stop = new() { Name = "StopRemote", Text = "원격 허용 중단 / 로그아웃", Enabled = false };
     private readonly Label status = new() { Text = "로그아웃 상태 · 화면을 공유하지 않습니다.", AutoSize = false, ForeColor = Color.FromArgb(77, 99, 139) };
     private readonly AgentClient client = new();
     private readonly Button checkUpdate = new() { Text = "업데이트 확인", AutoSize = true };
@@ -77,6 +77,7 @@ internal sealed class AgentForm : Form
 
     private static void AddField(TableLayoutPanel panel, string label, TextBox field)
     {
+        field.AccessibleName = label;
         panel.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(0, 8, 0, 5) });
         field.Dock = DockStyle.Top; field.Margin = new Padding(0, 0, 0, 5); panel.Controls.Add(field);
     }

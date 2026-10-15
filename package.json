@@ -16,6 +16,7 @@
     "check": "npm run build && npm test",
     "test:browser": "playwright test",
     "test:native": "tsx tests/native-smoke.ts",
+    "test:vm": "tsx tests/vm-e2e.ts",
     "format": "prettier --write server shared web tests *.ts *.json index.html",
     "format:check": "prettier --check server shared web tests *.ts *.json index.html",
     "version:set": "node scripts/version.mjs",

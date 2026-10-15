@@ -38,3 +38,7 @@
 | @types/express / node / react / react-dom / ws | 5.0.6 / 24.19.2 / 19.3.0 / 19.3.0 / 8.18.2 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped |
 
 GitHub Actions는 검증 시 확인한 v4 태그의 커밋 SHA로 고정했다. 의존성 업데이트 때 버전, 취약점 검사, 원문 고지를 함께 확인한다. 초기 `npm audit`는 발견 0건이었으며 향후 상태를 보장하지 않는다.
+
+## 로컬 검증 도구
+
+CI 문법 검증에 [actionlint 1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12)를 사용했다. 라이선스는 MIT이며 저작권은 rhysd에게 있다. 공식 Windows amd64 ZIP의 SHA-256을 GitHub Release API의 digest와 대조했다(`6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9`). 원문 고지와 도구는 Git 제외 경로 `local/tools/`에 보관하며 제품이나 에이전트 패키지에 포함하지 않는다.

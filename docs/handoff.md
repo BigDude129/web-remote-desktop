@@ -9,6 +9,7 @@
 3. architecture/protocol 문서로 auth, owner, session 수명주기를 파악한다.
 4. validation의 자동 검사와 미검증 실기기를 구분한다. 자동 통과를 실제 게임/모바일 호환으로 확대 해석하지 않는다.
 5. 버전업 시 releases 문서와 licenses 고지를 함께 갱신한다.
+6. VM 설치·실제 입력 검증은 vm-validation.md를 따른다. 로컬 빌드/물리 PC 실행 거부 확인과 실제 VM 합격을 구분한다.
 
 ## 파일별 책임
 
@@ -22,6 +23,7 @@
 | Windows | AgentForm, AgentClient, NativeDesktop | self-test, Integration 프로젝트 |
 | 릴리즈 | server/releases.ts, scripts/, ci.yml | releases.test.ts, version props, releases 문서 |
 | 고지 | LICENSE, generate-notices, package-agent | docs/licenses, 배포 ZIP 내용 |
+| VM 실제 제어 검사 | tests/vm-e2e.ts, DeskLink.DesktopProbe | vm-validation, 실제 Actions summary, publish-release |
 
 ## 후속 작업 제안
 

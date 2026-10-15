@@ -140,3 +140,79 @@ test('mobile layout stays within viewport and installation dialog works', async 
   await page.getByRole('button', { name: '연결 기록', exact: true }).click();
   await expect(page.getByText('웹 로그인', { exact: true })).toBeVisible();
 });
+
+test('held modifier survives normal pointer release and is released on blur', async ({ page }) => {
+  const registered = await runtime.agentLogin();
+  const agent = runtime.agentSocket(registered.token);
+  await agent.json();
+  await signIn(page);
+  await page.getByRole('button', { name: '원격 연결', exact: true }).click();
+  const start = await agent.json();
+  agent.send({ type: 'ready', sessionId: start.sessionId });
+  const jpeg = await page.evaluate(() => {
+    const target = document.createElement('canvas');
+    target.width = 800;
+    target.height = 450;
+    return target.toDataURL('image/jpeg').split(',')[1];
+  });
+  agent.ws.send(Buffer.from(jpeg, 'base64'));
+  const canvas = page.getByLabel('원격 Windows 화면. 클릭하면 키보드와 마우스로 조작합니다.');
+  await expect(canvas).toHaveAttribute('tabindex', '0');
+  await expect(canvas).not.toHaveClass('waiting-canvas');
+  await canvas.focus();
+  await page.keyboard.down('Control');
+  await canvas.click();
+  await canvas.click();
+  await page.keyboard.up('Control');
+  const inputs = () =>
+    agent.messages
+      .filter((item) => !item.binary)
+      .map((item) => JSON.parse(item.data.toString()))
+      .filter((item) => item.type === 'input')
+      .map((item) => item.input);
+  await expect
+    .poll(() => inputs().some((input) => input.code === 'ControlLeft' && !input.down))
+    .toBe(true);
+  const events = inputs();
+  const down = events.findIndex((input) => input.code === 'ControlLeft' && input.down);
+  const up = events.findIndex((input) => input.code === 'ControlLeft' && !input.down);
+  expect(down).toBeGreaterThanOrEqual(0);
+  expect(events.slice(down + 1, up).filter((input) => input.kind === 'release')).toHaveLength(0);
+  const beforeBlur = inputs().length;
+  await page.keyboard.down('Control');
+  await page.getByRole('button', { name: '문자열 입력' }).click();
+  await expect
+    .poll(() =>
+      inputs()
+        .slice(beforeBlur)
+        .some((input) => input.kind === 'release'),
+    )
+    .toBe(true);
+  await page.keyboard.up('Control');
+  await page.getByRole('button', { name: '문자열 입력' }).click();
+  await canvas.focus();
+  await canvas.hover();
+  const beforeLostCapture = inputs().length;
+  await page.keyboard.down('Control');
+  await canvas.evaluate((element) => {
+    element.addEventListener(
+      'gotpointercapture',
+      (event) => {
+        element.releasePointerCapture((event as PointerEvent).pointerId);
+      },
+      { once: true },
+    );
+  });
+  await page.mouse.down();
+  await page.mouse.move(750, 500);
+  await page.mouse.move(760, 510);
+  await expect
+    .poll(() =>
+      inputs()
+        .slice(beforeLostCapture)
+        .some((input) => input.kind === 'release'),
+    )
+    .toBe(true);
+  await page.mouse.up();
+  await page.keyboard.up('Control');
+});
