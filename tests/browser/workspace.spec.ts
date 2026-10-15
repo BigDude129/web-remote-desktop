@@ -141,6 +141,61 @@ test('mobile layout stays within viewport and installation dialog works', async 
   await expect(page.getByText('웹 로그인', { exact: true })).toBeVisible();
 });
 
+test('input failure keeps screen visible, pauses controls and allows explicit retry', async ({
+  page,
+}) => {
+  const registered = await runtime.agentLogin();
+  const agent = runtime.agentSocket(registered.token);
+  await agent.json();
+  await signIn(page);
+  await page.getByRole('button', { name: '원격 연결', exact: true }).click();
+  const start = await agent.json();
+  agent.send({ type: 'ready', sessionId: start.sessionId, inputRecovery: true });
+  const jpeg = await page.evaluate(() => {
+    const target = document.createElement('canvas');
+    target.width = 640;
+    target.height = 360;
+    return target.toDataURL('image/jpeg').split(',')[1];
+  });
+  agent.ws.send(Buffer.from(jpeg, 'base64'));
+  const canvas = page.locator('canvas');
+  await expect(canvas).not.toHaveClass('waiting-canvas');
+  agent.send({
+    type: 'warning',
+    sessionId: start.sessionId,
+    code: 'input_failed',
+    operation: 'move',
+    nativeError: 5,
+  });
+  await expect(page.getByRole('alert')).toContainText('화면은 계속 볼 수 있습니다');
+  await expect(page.getByRole('heading', { name: '연결이 종료되었습니다' })).toHaveCount(0);
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'release'),
+    )
+    .toBe(true);
+  agent.messages.splice(0);
+  await canvas.click();
+  await page.getByRole('button', { name: '입력 다시 시도', exact: true }).click();
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'resume'),
+    )
+    .toBe(true);
+  const beforeRetry = agent.messages
+    .map((item) => JSON.parse(item.data.toString()))
+    .map((item) => item.input?.kind);
+  expect(beforeRetry).not.toContain('button');
+  expect(beforeRetry).not.toContain('move');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await canvas.click();
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'button'),
+    )
+    .toBe(true);
+});
+
 test('held modifier survives normal pointer release and is released on blur', async ({ page }) => {
   const registered = await runtime.agentLogin();
   const agent = runtime.agentSocket(registered.token);

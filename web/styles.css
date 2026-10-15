@@ -1914,3 +1914,15 @@ h3 {
     transition: none !important;
   }
 }
+/* Input failures leave the video visible and expose an explicit retry. */
+.input-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: #fff3cf;
+  color: #68490b;
+  font-size: 14px;
+}

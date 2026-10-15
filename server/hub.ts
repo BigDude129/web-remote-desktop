@@ -20,9 +20,26 @@ interface ViewerPeer {
   window: number;
   inputs: number;
   alive: boolean;
+  inputRecovery: boolean;
+  inputBlocked: boolean;
 }
 const agentMessage = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('ready'), sessionId: z.string().uuid() }).strict(),
+  z
+    .object({
+      type: z.literal('ready'),
+      sessionId: z.string().uuid(),
+      inputRecovery: z.literal(true).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('warning'),
+      sessionId: z.string().uuid(),
+      code: z.literal('input_failed'),
+      operation: z.enum(['move', 'button', 'wheel', 'key', 'text']),
+      nativeError: z.number().int().min(0).max(2147483647),
+    })
+    .strict(),
   z
     .object({
       type: z.literal('error'),
@@ -151,6 +168,23 @@ export class Hub {
         if (data.toString().length > 4096) throw new Error('Too large');
         const message = agentMessage.parse(JSON.parse(data.toString()));
         if (message.sessionId !== session.id) return;
+        if (message.type === 'warning') {
+          const viewer = this.viewers.get(session.id);
+          if (session.state !== 'active' || !viewer?.inputRecovery) {
+            this.end(session.id, 'invalid_agent_message');
+            return;
+          }
+          if (!viewer.inputBlocked) {
+            viewer.inputBlocked = true;
+            this.send(viewer.ws, message);
+            this.store.audit(
+              auth.id,
+              `input.blocked.${message.operation}.${message.nativeError}`,
+              id,
+            );
+          }
+          return;
+        }
         if (message.type === 'error') {
           this.end(session.id, message.code);
           return;
@@ -160,7 +194,10 @@ export class Hub {
           .prepare("UPDATE remote_sessions SET state='active' WHERE id=?")
           .run(session.id);
         const viewer = this.viewers.get(session.id);
-        if (viewer) this.send(viewer.ws, { type: 'ready' });
+        if (viewer) {
+          viewer.inputRecovery = message.inputRecovery === true;
+          this.send(viewer.ws, { type: 'ready' });
+        }
       } catch {
         this.end(session.id, 'invalid_agent_message');
       }
@@ -181,9 +218,17 @@ export class Hub {
       return;
     }
     this.store.db.prepare("UPDATE remote_sessions SET state='connecting' WHERE id=?").run(id);
-    const peer: ViewerPeer = { ws, auth, window: Date.now(), inputs: 0, alive: true };
+    const peer: ViewerPeer = {
+      ws,
+      auth,
+      window: Date.now(),
+      inputs: 0,
+      alive: true,
+      inputRecovery: false,
+      inputBlocked: false,
+    };
     this.viewers.set(id, peer);
-    this.send(agent.ws, { type: 'start', sessionId: id, viewer: auth.name });
+    this.send(agent.ws, { type: 'start', sessionId: id, viewer: auth.name, inputRecovery: true });
     this.store.audit(auth.id, 'session.started', deviceId);
     ws.on('error', () => ws.terminate());
     ws.on('pong', () => {
@@ -215,6 +260,13 @@ export class Hub {
       }
       try {
         const input = inputSchema.parse(JSON.parse(data.toString()));
+        if (input.kind === 'resume') {
+          if (!peer.inputRecovery) {
+            this.end(id, 'invalid_input');
+            return;
+          }
+          peer.inputBlocked = false;
+        } else if (peer.inputBlocked && input.kind !== 'release') return;
         if (agent.ws.bufferedAmount > 256 * 1024) {
           this.end(id, 'agent_slow');
           return;

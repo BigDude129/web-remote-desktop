@@ -18,6 +18,8 @@ internal sealed class AgentClient : IDisposable
     private Uri? server;
     private string? token;
     private string? sessionId;
+    private bool inputRecovery;
+    private bool inputBlocked;
     private bool disposed;
     internal event Action<string>? Status;
     internal event Action? SignedOut;
@@ -136,8 +138,11 @@ internal sealed class AgentClient : IDisposable
                     sessionId = data.GetProperty("sessionId").GetString()!;
                     if (!Guid.TryParse(sessionId, out _)) throw new IOException("Invalid session");
                     captureLifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                    inputBlocked = false;
+                    inputRecovery = data.TryGetProperty("inputRecovery", out var recovery) && recovery.ValueKind == JsonValueKind.True;
                     Status?.Invoke($"원격 제어 중 · {data.GetProperty("viewer").GetString()}");
-                    await SendJsonAsync(new { type = "ready", sessionId }, cancellation);
+                    if (inputRecovery) await SendJsonAsync(new { type = "ready", sessionId, inputRecovery = true }, cancellation);
+                    else await SendJsonAsync(new { type = "ready", sessionId }, cancellation);
                     var currentSession = sessionId;
                     captureTask = CaptureAsync(currentSession, captureLifetime.Token);
                     break;
@@ -148,7 +153,24 @@ internal sealed class AgentClient : IDisposable
                     break;
                 case "input":
                     if (sessionId is null || captureLifetime?.IsCancellationRequested != false || data.GetProperty("sessionId").GetString() != sessionId) break;
-                    try { desktop.Apply(data.GetProperty("input")); }
+                    var input = data.GetProperty("input");
+                    var kind = input.GetProperty("kind").GetString();
+                    if (kind == "resume" && inputRecovery)
+                    {
+                        desktop.ReleaseAll();
+                        inputBlocked = false;
+                        Status?.Invoke("원격 제어 중 · 입력 재시도");
+                        break;
+                    }
+                    if (inputBlocked && kind != "release") break;
+                    try { desktop.Apply(input); }
+                    catch (NativeInputException error) when (inputRecovery)
+                    {
+                        inputBlocked = true;
+                        desktop.ReleaseAll();
+                        Status?.Invoke($"입력 거부 · {error.Operation} / Windows {error.NativeError} · 화면 공유는 유지합니다.");
+                        await SendJsonAsync(new { type = "warning", sessionId, code = "input_failed", operation = error.Operation, nativeError = error.NativeError }, cancellation);
+                    }
                     catch (Exception error) when (error is InvalidOperationException or InvalidDataException or KeyNotFoundException)
                     {
                         var failedSession = sessionId;
@@ -210,7 +232,7 @@ internal sealed class AgentClient : IDisposable
             try { await captureTask; } catch (OperationCanceledException) { }
         }
         desktop.ReleaseAll();
-        captureLifetime?.Dispose(); captureLifetime = null; captureTask = null; sessionId = null;
+        captureLifetime?.Dispose(); captureLifetime = null; captureTask = null; sessionId = null; inputBlocked = false; inputRecovery = false;
     }
 
     internal async Task LogoutAsync()

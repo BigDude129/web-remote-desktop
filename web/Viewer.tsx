@@ -31,6 +31,8 @@ export function Viewer({
   const surface = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
   const active = useRef(false);
+  const inputBlocked = useRef(false);
+  const [inputWarning, setInputWarning] = useState('');
   const [status, setStatus] = useState('에이전트에 연결하는 중…');
   const [ready, setReady] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -41,12 +43,16 @@ export function Viewer({
   const pressedPointer = useRef<number | null>(null);
 
   function send(input: RemoteInput) {
+    if (inputBlocked.current && input.kind !== 'release' && input.kind !== 'resume') return false;
     if (
       active.current &&
       ws.current?.readyState === WebSocket.OPEN &&
       ws.current.bufferedAmount < 64 * 1024
-    )
+    ) {
       ws.current.send(JSON.stringify(input));
+      return true;
+    }
+    return false;
   }
   const release = () => {
     pressedPointer.current = null;
@@ -67,6 +73,14 @@ export function Viewer({
           active.current = true;
           setReady(true);
           setStatus('연결됨 · 화면을 클릭해 조작하세요');
+        }
+        if (message.type === 'warning' && message.code === 'input_failed') {
+          inputBlocked.current = true;
+          release();
+          setInputWarning(
+            `Windows가 입력을 거부했습니다 (${message.operation} / ${message.nativeError}). 화면은 계속 볼 수 있습니다. 대상 앱을 확인한 뒤 입력을 다시 시도하세요.`,
+          );
+          setStatus('연결됨 · 입력 일시 중지');
         }
         if (message.type === 'ended') {
           active.current = false;
@@ -196,6 +210,23 @@ export function Viewer({
           </button>
         </div>
       </header>
+      {inputWarning && !ended && (
+        <div className="input-warning" role="alert">
+          <span>{inputWarning}</span>
+          <button
+            className="subtle-button"
+            disabled={!ready}
+            onClick={() => {
+              if (!send({ kind: 'resume' })) return;
+              inputBlocked.current = false;
+              setInputWarning('');
+              setStatus('연결됨 · 입력 재시도');
+            }}
+          >
+            입력 다시 시도
+          </button>
+        </div>
+      )}
       <div className="remote-surface" ref={surface}>
         <canvas
           ref={canvas}
