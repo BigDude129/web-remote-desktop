@@ -102,4 +102,6 @@ type RemoteInput =
 릴리즈 cache/실패/fallback/무결성 의미는 [릴리즈 절차](releases.md)에 기록한다. 공개 릴리즈 조회는 로그인이나 캡처 활성화를 요구하지 않는다. 웹과 agent의 인증 토큰은 GitHub로 전송하지 않는다.
 # iPad Caps Lock 웹 매핑 (0.1.1 파일럿 후속)
 
+`PC Caps Lock 전환` 버튼은 기존 release 및 key/CapsLock down/up을 보낸다. 물리 Caps Lock의 Lang1 매핑과 별개다. 호스트 잠금 상태 조회/동기화 메시지는 추가하지 않는다.
+
 프로토콜 변경 없음. 옵션 활성화 시 원격 canvas의 CapsLock keydown을 기존 `key/Lang1/down:true`, `key/Lang1/down:false`로 변환한다. repeat 및 keyup은 추가 전송하지 않는다. OS가 웹에 키를 전달하지 않는 상황과 Windows IME의 실제 상태는 이 메시지로 판별할 수 없다.

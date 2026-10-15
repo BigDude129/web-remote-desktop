@@ -342,6 +342,22 @@ export function Viewer({
           />
           Caps Lock을 원격 PC 한/영키로 사용
         </label>
+        <button
+          className="subtle-button"
+          disabled={!ready || !!inputWarning}
+          onClick={() => {
+            release();
+            special('CapsLock');
+            canvas.current?.focus();
+          }}
+        >
+          PC Caps Lock 전환
+        </button>
+        <p>
+          영어가 계속 대문자로 입력되면 위 버튼을 한 번 누른 뒤 확인하세요. PC의 대문자 잠금을
+          반대로 전환합니다. 한/영 전환과는 별개이며, 현재 PC 잠금 상태는 이 페이지에 표시되지
+          않습니다.
+        </p>
         <p>
           원격 화면을 터치해 키보드 초점을 맞추세요. iPad에서는 입력 언어를 영어로 두고, 설정 → 일반
           → 키보드 → 하드웨어 키보드에서 Caps Lock으로 언어 전환을 끄세요. iPad가 먼저 처리한 키는

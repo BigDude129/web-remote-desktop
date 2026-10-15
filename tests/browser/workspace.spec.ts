@@ -288,6 +288,31 @@ test('iPad Caps Lock maps to one complete Hangul toggle and can be disabled', as
   await page.getByText('키보드 설정 · iPad 한/영', { exact: true }).click();
   const setting = page.getByLabel('Caps Lock을 원격 PC 한/영키로 사용');
   await expect(setting).toBeChecked();
+  const jpeg = await page.evaluate(() => {
+    const frame = document.createElement('canvas');
+    frame.width = 640;
+    frame.height = 360;
+    return frame.toDataURL('image/jpeg').split(',')[1];
+  });
+  agent.ws.send(Buffer.from(jpeg, 'base64'));
+  await expect(canvas).not.toHaveClass('waiting-canvas');
+  await page.getByRole('button', { name: 'PC Caps Lock 전환', exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        agent.messages.filter((item) => JSON.parse(item.data.toString()).input?.code === 'CapsLock')
+          .length,
+    )
+    .toBe(2);
+  const capsInputs = agent.messages
+    .map((item) => JSON.parse(item.data.toString()).input)
+    .filter((input) => input?.code === 'CapsLock');
+  expect(capsInputs).toEqual([
+    { kind: 'key', code: 'CapsLock', down: true },
+    { kind: 'key', code: 'CapsLock', down: false },
+  ]);
+  await expect(canvas).toBeFocused();
+  agent.messages.splice(0);
   const keys = () =>
     agent.messages
       .map((item) => JSON.parse(item.data.toString()).input)
