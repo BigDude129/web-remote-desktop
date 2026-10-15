@@ -1,0 +1,45 @@
+{
+  "name": "web-remote-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "build": "node scripts/version.mjs --check && node scripts/generate-notices.mjs && tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "user:add": "tsx server/create-user.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run build && npm test",
+    "test:browser": "playwright test",
+    "test:native": "tsx tests/native-smoke.ts",
+    "format": "prettier --write server shared web tests *.ts *.json index.html",
+    "format:check": "prettier --check server shared web tests *.ts *.json index.html",
+    "version:set": "node scripts/version.mjs",
+    "licenses": "node scripts/generate-notices.mjs"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "lucide-react": "^1.57.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "ws": "^8.22.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^5.2.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+local/
+artifacts/
+agent/
+package-lock.json
+test-results/
+playwright-report/
