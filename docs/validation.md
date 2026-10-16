@@ -150,3 +150,11 @@
 - Windows 로컬 .NET 10 SDK: agent Release build 경고/오류 0, --self-test 통과(실제 OS 입력 주입 없음).
 - Oracle SSH 읽기 전용 검사: desklink-pilot/desklink-preview 모두 active, 배포 package.json 0.1.1. 서버 재배포·재시작 없음.
 - 실제 iPad/게임/외부망 재시험 및 신규 VM 검사는 이번 통합에서 수행하지 않음.
+
+## 2026-10-16 Oracle main 배포 검증
+
+- 배포 소스 main 4d44771 / 앱 0.1.1. 앞선 통합 검사를 통과한 빌드 사용.
+- 기존/로컬 package-lock SHA-256 일치 확인. 이전 코드 및 정지된 DB 백업 후 앱 서비스 재시작, health 정상.
+- 외부 HTTPS health·인증 차단·로그인 Secure/HttpOnly 쿠키·합성 WSS 양방향 중계·세션 종료·로그아웃 통과.
+- 외부 HTML의 자산 참조 및 JS/CSS SHA-256이 배포 빌드와 일치. 합성 기기 정리 완료. 두 서비스 active.
+- 실제 PC/iPad/게임 입력은 재시험하지 않음. 배포는 서버/웹 대상이며 Windows 에이전트 신규 Release 게시는 별도.

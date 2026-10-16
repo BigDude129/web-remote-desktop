@@ -115,3 +115,9 @@ Oracle 공식 VCN 요금 페이지는 월 첫 10TB 아웃바운드 무료를 안
 ## 2026-10-16 실행 상태 재확인
 
 SSH 읽기 전용 검사에서 desklink-pilot 및 desklink-preview 사용자 서비스가 모두 active였고 서버 package.json 버전은 0.1.1이었다. 상단 0.1.0은 최초 배포 기준 기록이다. 저장소 main 통합과 서버 파일 배포는 별개이며 이번에는 서버 재시작·재배포를 수행하지 않았다.
+
+## 2026-10-16 main 통합본 배포 완료
+
+사용자 요청으로 검증 완료한 main 4d44771의 서버/웹을 기존 Oracle 파일럿에 배포했다. 의존성 잠금 파일 SHA-256이 같아 재설치는 생략했다. 이전 코드와 정지 상태의 SQLite DB를 서버 local/의 시각별 백업에 보존하고 앱 서비스만 재시작했다. 터널 서비스와 기존 주소는 유지했다. 서버 local/deployed-commit.txt에 배포 소스 전체 SHA를 기록했다.
+
+외부 HTTPS health, 비로그인 기기 조회 차단, 로그인과 Secure/HttpOnly 쿠키, 합성 화면·입력 WSS 왕복, 세션 종료·로그아웃을 검증했다. 외부 HTML의 JS/CSS 경로와 자산 SHA-256이 로컬 검증 빌드와 일치했다. 합성 기기는 삭제했고 두 서비스가 active임을 재확인했다. 실제 PC/iPad 입력 재시험이나 신규 Windows Release 게시는 수행하지 않았다.
