@@ -65,6 +65,7 @@ export const inputSchema = z.discriminatedUnion('kind', [
     .strict(),
   z.object({ kind: z.literal('text'), text: z.string().min(1).max(2000) }).strict(),
   z.object({ kind: z.literal('release') }).strict(),
+  z.object({ kind: z.literal('resume') }).strict(),
 ]);
 export type RemoteInput = z.infer<typeof inputSchema>;
 export interface User {

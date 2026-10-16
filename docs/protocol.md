@@ -59,6 +59,16 @@ UTF-8 JSON, HTTP 본문 최대 16 KiB. ID는 UUID, 시간은 Unix milliseconds. 
 
 error code: `capture_failed`, `desktop_unavailable`, `input_failed`. stop/단절 시 캡처와 키·버튼을 해제한다. revoked는 자동 재로그인하지 않는다. 캡처 종료를 기다린 뒤 다음 세션을 시작하여 이전 frame이 새 ready 뒤에 섞이지 않게 한다.
 
+### 0.1.1 입력 실패 복구 확장
+
+서버가 start에 `inputRecovery:true`를 제안하고 지원하는 agent만 ready에 같은 필드를 응답한다. 미협상 시 기존 규약을 유지한다. 신규 agent도 구서버의 start에 필드가 없으면 기존 ready/error만 보낸다.
+
+협상된 세션에서 Windows 입력 API가 실패하면 agent는 `{type:"warning",sessionId,code:"input_failed",operation,nativeError}`를 보낸다. operation은 move/button/wheel/key/text, nativeError는 0 이상의 정수다. 실제 키·문자열·좌표는 진단에 포함하지 않는다. 서버는 해당 세션 viewer에 전달하고 `input.blocked.<operation>.<nativeError>`를 기록한다.
+
+agent·서버·웹은 입력을 일시 중지하지만 JPEG 전송과 세션을 유지한다. release는 계속 허용한다. 사용자가 웹의 '입력 다시 시도'를 누르면 `{kind:"resume"}`를 보내며, agent는 추적한 키 해제를 시도한 뒤 입력을 재개한다. 실패 입력은 재전송하지 않는다. resume은 협상된 세션에서만 허용한다. 오래된 웹은 경고를 표시하지 못할 수 있으므로 서버/웹을 먼저 배포하고 새 agent를 실행한다.
+
+잠금·보안 데스크톱·캡처 오류·잘못된 메시지는 기존처럼 종료한다. nativeError만으로 UIPI나 게임 보안 차단을 단정하지 않는다. Windows 권한을 올리거나 보안 기능을 우회하는 변경은 없다.
+
 ## 브라우저 WebSocket
 
 `/ws/viewer/:sessionId`, 생성에 사용한 웹 쿠키+정확한 Origin. query string은 거부한다. HTTP 세션 생성 후 30초 안에 1회 attach한다. 같은 사용자라도 다른 로그인으로 attach할 수 없다.
@@ -90,3 +100,8 @@ type RemoteInput =
 규약 변경 시 서버, 웹, 에이전트, 통합 테스트, 이 문서/CHANGELOG를 함께 갱신한다. 호환성이 깨지면 protocolVersion을 올리고 구버전 거부/업그레이드를 명시한다.
 
 릴리즈 cache/실패/fallback/무결성 의미는 [릴리즈 절차](releases.md)에 기록한다. 공개 릴리즈 조회는 로그인이나 캡처 활성화를 요구하지 않는다. 웹과 agent의 인증 토큰은 GitHub로 전송하지 않는다.
+# iPad Caps Lock 웹 매핑 (0.1.1 파일럿 후속)
+
+`PC Caps Lock 전환` 버튼은 기존 release 및 key/CapsLock down/up을 보낸다. 물리 Caps Lock의 Lang1 매핑과 별개다. 호스트 잠금 상태 조회/동기화 메시지는 추가하지 않는다.
+
+프로토콜 변경 없음. 옵션 활성화 시 원격 canvas의 CapsLock keydown을 기존 `key/Lang1/down:true`, `key/Lang1/down:false`로 변환한다. repeat 및 keyup은 추가 전송하지 않는다. OS가 웹에 키를 전달하지 않는 상황과 Windows IME의 실제 상태는 이 메시지로 판별할 수 없다.

@@ -1,0 +1,19 @@
+[Unit]
+Description=DeskLink Oracle pilot server
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/desklink-pilot
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=160
+ExecStart=%h/.local/share/desklink-node/bin/node --import tsx server/index.ts
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+MemoryMax=256M
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

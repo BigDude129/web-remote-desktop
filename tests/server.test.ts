@@ -156,6 +156,53 @@ test('web logout terminates an active viewer and invalidates its socket authoriz
   );
 });
 
+test('recoverable input rejection keeps frames alive and blocks input until explicit resume', async (t) => {
+  const f = await fixture();
+  t.after(() => f.close());
+  const login = await f.login();
+  const registered = await f.agentLogin();
+  const agent = f.agentSocket(registered.token);
+  await agent.json();
+  const { session } = await (
+    await f.request('/sessions', {
+      method: 'POST',
+      headers: login.headers,
+      body: JSON.stringify({ deviceId: registered.deviceId }),
+    })
+  ).json();
+  const viewer = f.viewerSocket(session.id, login.cookie);
+  assert.equal((await agent.json()).inputRecovery, true);
+  agent.send({ type: 'ready', sessionId: session.id, inputRecovery: true });
+  await viewer.json();
+  const warning = {
+    type: 'warning',
+    sessionId: session.id,
+    code: 'input_failed',
+    operation: 'button',
+    nativeError: 5,
+  };
+  agent.send(warning);
+  assert.deepEqual(await viewer.json(), warning);
+  assert.equal(f.store.session(session.id)?.state, 'active');
+  const frame = Buffer.from([0xff, 0xd8, 0x01, 0xff, 0xd9]);
+  agent.ws.send(frame);
+  assert.deepEqual(await viewer.next(true), frame);
+  viewer.send({ kind: 'key', code: 'KeyA', down: true });
+  viewer.send({ kind: 'release' });
+  // Ordered WS messages: release must arrive without the blocked key first.
+  assert.equal((await agent.json()).input.kind, 'release');
+  viewer.send({ kind: 'resume' });
+  assert.equal((await agent.json()).input.kind, 'resume');
+  viewer.send({ kind: 'key', code: 'KeyA', down: true });
+  assert.equal((await agent.json()).input.kind, 'key');
+  assert.equal(f.store.session(session.id)?.state, 'active');
+  const events = await (await f.request('/activity', { headers: login.headers })).text();
+  assert.ok(events.includes('input.blocked.button.5'));
+  // Actual capture failure remains fatal; recovery must not hide it.
+  agent.send({ type: 'error', sessionId: session.id, code: 'capture_failed' });
+  assert.equal((await viewer.json()).reason, 'capture_failed');
+});
+
 test('agent relogin preserves its device ID and revokes previous credentials', async (t) => {
   const f = await fixture();
   t.after(() => f.close());

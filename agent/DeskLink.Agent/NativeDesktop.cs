@@ -4,6 +4,12 @@ using System.Text.Json;
 
 namespace DeskLink.Agent;
 
+internal sealed class NativeInputException(string operation, int nativeError) : InvalidOperationException("input_failed")
+{
+    internal string Operation { get; } = operation;
+    internal int NativeError { get; } = Math.Max(0, nativeError);
+}
+
 internal sealed class NativeDesktop
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -91,30 +97,30 @@ internal sealed class NativeDesktop
                     var y = input.GetProperty("y").GetDouble();
                     if (!double.IsFinite(x) || !double.IsFinite(y) || x is < 0 or > 1 || y is < 0 or > 1) throw new InvalidDataException();
                     var bounds = Screen.PrimaryScreen!.Bounds;
-                    if (!SetCursorPos(bounds.Left + (int)Math.Round(x * (bounds.Width - 1)), bounds.Top + (int)Math.Round(y * (bounds.Height - 1)))) throw new InvalidOperationException("input_failed");
+                    if (!SetCursorPos(bounds.Left + (int)Math.Round(x * (bounds.Width - 1)), bounds.Top + (int)Math.Round(y * (bounds.Height - 1)))) throw new NativeInputException("move", Marshal.GetLastWin32Error());
                     break;
                 case "button":
                     var button = input.GetProperty("button").GetString()!;
                     var down = input.GetProperty("down").GetBoolean();
-                    Send([MouseButton(button, down)]);
+                    Send([MouseButton(button, down)], "button");
                     if (down) buttons.Add(button); else buttons.Remove(button);
                     break;
                 case "wheel":
                     var delta = input.GetProperty("delta").GetInt32();
                     if (delta is < -1200 or > 1200) throw new InvalidDataException();
-                    Send([new Input { Type = 0, Data = new InputUnion { Mouse = new MouseInput { Flags = 0x0800, MouseData = unchecked((uint)delta) } } }]);
+                    Send([new Input { Type = 0, Data = new InputUnion { Mouse = new MouseInput { Flags = 0x0800, MouseData = unchecked((uint)delta) } } }], "wheel");
                     break;
                 case "key":
                     var code = input.GetProperty("code").GetString()!;
                     var isDown = input.GetProperty("down").GetBoolean();
-                    Send([Key(code, isDown)]);
+                    Send([Key(code, isDown)], "key");
                     if (isDown) keys.Add(code); else keys.Remove(code);
                     break;
                 case "text":
                     var text = input.GetProperty("text").GetString()!;
                     if (text.Length is < 1 or > 2000) throw new InvalidDataException();
                     ReleaseAll();
-                    foreach (var chunk in Unicode(text).Chunk(100)) Send(chunk);
+                    foreach (var chunk in Unicode(text).Chunk(100)) Send(chunk, "text");
                     break;
                 default: throw new InvalidDataException();
             }
@@ -131,10 +137,10 @@ internal sealed class NativeDesktop
         }
     }
 
-    private static void Send(Input[] inputs)
+    private static void Send(Input[] inputs, string operation)
     {
         if (SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Input>()) != inputs.Length)
-            throw new InvalidOperationException("input_failed");
+            throw new NativeInputException(operation, Marshal.GetLastWin32Error());
     }
 
     internal static Input[] Unicode(string text) => text.SelectMany(character => new[] {

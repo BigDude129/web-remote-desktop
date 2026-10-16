@@ -141,6 +141,61 @@ test('mobile layout stays within viewport and installation dialog works', async 
   await expect(page.getByText('웹 로그인', { exact: true })).toBeVisible();
 });
 
+test('input failure keeps screen visible, pauses controls and allows explicit retry', async ({
+  page,
+}) => {
+  const registered = await runtime.agentLogin();
+  const agent = runtime.agentSocket(registered.token);
+  await agent.json();
+  await signIn(page);
+  await page.getByRole('button', { name: '원격 연결', exact: true }).click();
+  const start = await agent.json();
+  agent.send({ type: 'ready', sessionId: start.sessionId, inputRecovery: true });
+  const jpeg = await page.evaluate(() => {
+    const target = document.createElement('canvas');
+    target.width = 640;
+    target.height = 360;
+    return target.toDataURL('image/jpeg').split(',')[1];
+  });
+  agent.ws.send(Buffer.from(jpeg, 'base64'));
+  const canvas = page.locator('canvas');
+  await expect(canvas).not.toHaveClass('waiting-canvas');
+  agent.send({
+    type: 'warning',
+    sessionId: start.sessionId,
+    code: 'input_failed',
+    operation: 'move',
+    nativeError: 5,
+  });
+  await expect(page.getByRole('alert')).toContainText('화면은 계속 볼 수 있습니다');
+  await expect(page.getByRole('heading', { name: '연결이 종료되었습니다' })).toHaveCount(0);
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'release'),
+    )
+    .toBe(true);
+  agent.messages.splice(0);
+  await canvas.click();
+  await page.getByRole('button', { name: '입력 다시 시도', exact: true }).click();
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'resume'),
+    )
+    .toBe(true);
+  const beforeRetry = agent.messages
+    .map((item) => JSON.parse(item.data.toString()))
+    .map((item) => item.input?.kind);
+  expect(beforeRetry).not.toContain('button');
+  expect(beforeRetry).not.toContain('move');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await canvas.click();
+  await expect
+    .poll(() =>
+      agent.messages.some((item) => JSON.parse(item.data.toString()).input?.kind === 'button'),
+    )
+    .toBe(true);
+});
+
 test('held modifier survives normal pointer release and is released on blur', async ({ page }) => {
   const registered = await runtime.agentLogin();
   const agent = runtime.agentSocket(registered.token);
@@ -215,4 +270,78 @@ test('held modifier survives normal pointer release and is released on blur', as
     .toBe(true);
   await page.mouse.up();
   await page.keyboard.up('Control');
+});
+test('iPad Caps Lock maps to one complete Hangul toggle and can be disabled', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
+    Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+  });
+  const registered = await runtime.agentLogin();
+  const agent = runtime.agentSocket(registered.token);
+  await agent.json();
+  await signIn(page);
+  await page.getByRole('button', { name: '원격 연결', exact: true }).click();
+  const start = await agent.json();
+  agent.send({ type: 'ready', sessionId: start.sessionId });
+  const canvas = page.locator('canvas');
+  await expect(canvas).toHaveAttribute('tabindex', '0');
+  await page.getByText('키보드 설정 · iPad 한/영', { exact: true }).click();
+  const setting = page.getByLabel('Caps Lock을 원격 PC 한/영키로 사용');
+  await expect(setting).toBeChecked();
+  const jpeg = await page.evaluate(() => {
+    const frame = document.createElement('canvas');
+    frame.width = 640;
+    frame.height = 360;
+    return frame.toDataURL('image/jpeg').split(',')[1];
+  });
+  agent.ws.send(Buffer.from(jpeg, 'base64'));
+  await expect(canvas).not.toHaveClass('waiting-canvas');
+  await page.getByRole('button', { name: 'PC Caps Lock 전환', exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        agent.messages.filter((item) => JSON.parse(item.data.toString()).input?.code === 'CapsLock')
+          .length,
+    )
+    .toBe(2);
+  const capsInputs = agent.messages
+    .map((item) => JSON.parse(item.data.toString()).input)
+    .filter((input) => input?.code === 'CapsLock');
+  expect(capsInputs).toEqual([
+    { kind: 'key', code: 'CapsLock', down: true },
+    { kind: 'key', code: 'CapsLock', down: false },
+  ]);
+  await expect(canvas).toBeFocused();
+  agent.messages.splice(0);
+  const keys = () =>
+    agent.messages
+      .map((item) => JSON.parse(item.data.toString()).input)
+      .filter((input) => input?.kind === 'key');
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock', key: 'CapsLock' });
+  await expect.poll(() => keys().length).toBe(2);
+  expect(keys()).toEqual([
+    { kind: 'key', code: 'Lang1', down: true },
+    { kind: 'key', code: 'Lang1', down: false },
+  ]);
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock', repeat: true });
+  await canvas.dispatchEvent('keyup', { code: 'CapsLock' });
+  // An ordinary key is a relay barrier for the negative repeat/keyup assertion.
+  await canvas.dispatchEvent('keydown', { code: 'KeyA' });
+  await expect.poll(() => keys().length).toBe(3);
+  expect(keys()[2].code).toBe('KeyA');
+  await setting.uncheck();
+  await canvas.dispatchEvent('keydown', { code: 'CapsLock' });
+  await canvas.dispatchEvent('keyup', { code: 'CapsLock' });
+  await expect.poll(() => keys().length).toBe(5);
+  expect(
+    keys()
+      .slice(-2)
+      .map((input) => input.code),
+  ).toEqual(['CapsLock', 'CapsLock']);
+  expect(await page.evaluate(() => localStorage.getItem('desklink.capsAsHangul'))).toBe('false');
+  await page.getByRole('button', { name: '문자열 입력' }).click();
+  await page.getByLabel('한글 · 모바일 입력').dispatchEvent('keydown', { code: 'CapsLock' });
+  await canvas.dispatchEvent('keydown', { code: 'KeyB' });
+  await expect.poll(() => keys().length).toBe(6);
+  expect(keys()[5].code).toBe('KeyB');
 });

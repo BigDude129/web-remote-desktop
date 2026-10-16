@@ -89,6 +89,7 @@ local/, artifacts/           개인 환경·DB·도구·생성물 (Git 제외)
 - [아키텍처와 보안 경계](docs/architecture.md), [HTTP/WebSocket 규약](docs/protocol.md)
 - [기획과 벤치마킹](docs/plan.md), [결정 기록](docs/decisions.md), [참고 제품·의존성](docs/benchmarks.md)
 - [협업 인수인계와 다음 작업](docs/handoff.md), [검증 기록](docs/validation.md)
+- [Oracle 외부 접속 파일럿 준비](docs/oracle-pilot.md): 배포 구성, 트래픽 산정, LTE/5G 검증 기준
 - [MIT 및 제3자 라이선스 고지](docs/licenses.md), [버전업·최신 에이전트 릴리즈](docs/releases.md)
 
 프로젝트는 사용자 선택에 따라 [MIT](LICENSE)입니다. 웹은 `/license`와 `/licenses`, 에이전트 ZIP은 `LICENSE.txt`와 `THIRD-PARTY-NOTICES.txt`로 원문 고지를 제공합니다. 고지는 `npm run licenses`/빌드와 에이전트 패키징 시 생성됩니다.
