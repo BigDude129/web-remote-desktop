@@ -4,4 +4,4 @@ Read `rules/rules.md` before changing code. Keep design, protocol, validation an
 
 Use Node.js 24 LTS for server/web work and .NET 10 SDK for the Windows agent. `npm run check` is the server/web gate. Build and run the agent self-test on Windows before declaring native changes verified. See README.md for commands.
 
-Never commit runtime databases, credentials, screenshots or personal connection details. Default collaboration is a branch and PR; direct main commits are allowed when the user explicitly requests them. Do not force push.
+Never commit runtime databases, credentials, screenshots or personal connection details. Per the user request on 2026-10-16, work directly on main until this policy changes; do not create task branches by default. Do not force push.

@@ -91,3 +91,7 @@ rules/rules.md, AGENTS.md, 실행/아키텍처/프로토콜/벤치마킹/검증/
 웹은 iPad 감지 시 Caps Lock을 기존 Lang1 한 번 누름/해제로 변환한다. keyup 누락에 대비해 keydown에서 쌍을 보내고 repeat/keyup은 무시한다. 다른 기기는 기본 매핑을 유지하며 사용자가 옵션을 바꿀 수 있다. 설정은 브라우저 localStorage에만 저장하고 저장 불가 시 해당 세션에 적용한다. 원격 canvas에만 적용해 로컬 문자열 조합을 간섭하지 않는다. iPadOS가 선처리한 키는 복구할 수 없으므로 OS 설정과 화면 한/영 버튼을 안내한다. [Apple 설정 안내](https://support.apple.com/en-euro/guide/ipad/ipaddd28d7ed/ipados).
 
 ID / 날짜 / 상태 / 관련 C·R·G 번호 / 결정 내용 / 이유 / 비교 대안 / 영향 / 재검토 조건
+
+## D-016 / 2026-10-16 / 확정: main 단일 작업 흐름
+
+사용자 요청으로 origin/main의 글자 크기·반응형 개선과 deploy/oracle-pilot의 Oracle 배포·입력 복구·iPad 한영·Caps Lock 복구를 이력 보존 merge로 통합했다. D-010의 이후 PR 기본 정책은 RULE-022로 대체한다. Git 소스 통합이며 실제 서버 재배포나 신규 Release 게시를 뜻하지 않는다. 통신 규약 변경은 없으며 기존 protocol 문서를 유지한다.

@@ -142,3 +142,11 @@
 - `npm run check`: 19개 통과. `npm run test:browser`: 6개 통과. `npm run format:check`: 통과. 네이티브 코드 변경 없음, 물리 PC OS 입력 자동 검사 없음.
 - Oracle 웹 정적 파일만 갱신. 기존 서버/터널/agent 재시작 없음. iPadOS 실제 키 전달 및 원격 Windows IME 전환은 사용자 재시험 필요.
 - 재시험: 사이트 새로고침 → 키보드 설정에서 Caps Lock 옵션 확인 → iPad 입력 언어 영어 및 하드웨어 Caps Lock 언어 전환 끄기 → 원격 화면 초점 → Caps Lock 전환. 화면 한/영 버튼과 비교. 게임 문제는 화면/입력 증상 구분 후 진행.
+
+## 2026-10-16 main 통합 검증
+
+- origin/main c3074a6과 deploy/oracle-pilot 6e87103을 이력 보존 merge로 통합.
+- Node 24.19.0: npm run check 통과(19 tests), npm run test:browser 통과(6 tests), npm run format:check 통과.
+- Windows 로컬 .NET 10 SDK: agent Release build 경고/오류 0, --self-test 통과(실제 OS 입력 주입 없음).
+- Oracle SSH 읽기 전용 검사: desklink-pilot/desklink-preview 모두 active, 배포 package.json 0.1.1. 서버 재배포·재시작 없음.
+- 실제 iPad/게임/외부망 재시험 및 신규 VM 검사는 이번 통합에서 수행하지 않음.

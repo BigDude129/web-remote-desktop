@@ -111,3 +111,7 @@ Oracle 공식 VCN 요금 페이지는 월 첫 10TB 아웃바운드 무료를 안
 - Caddy WebSocket 프록시: https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
 - Caddy HTTPS: https://caddyserver.com/docs/automatic-https
 - Cloudflare 임시 터널: https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/
+
+## 2026-10-16 실행 상태 재확인
+
+SSH 읽기 전용 검사에서 desklink-pilot 및 desklink-preview 사용자 서비스가 모두 active였고 서버 package.json 버전은 0.1.1이었다. 상단 0.1.0은 최초 배포 기준 기록이다. 저장소 main 통합과 서버 파일 배포는 별개이며 이번에는 서버 재시작·재배포를 수행하지 않았다.

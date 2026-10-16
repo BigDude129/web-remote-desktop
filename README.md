@@ -96,4 +96,4 @@ local/, artifacts/           개인 환경·DB·도구·생성물 (Git 제외)
 
 버전업은 `npm run version:set -- X.Y.Z` → 변경/릴리즈 노트 → 검사 → main 반영 → `vX.Y.Z` 태그 푸시 순서입니다. CI가 서버/웹/Windows 검증을 통과한 뒤 ZIP/SHA256/manifest를 GitHub Release에 게시합니다. 최신 릴리즈 조회 저장소는 `.env`의 `RELEASE_REPOSITORY`로 지정하며, 빈 값은 로컬 패키지만 제공합니다.
 
-운영 서버 배포와 인터넷 공개는 이번 작업에 포함하지 않았습니다. HTTPS reverse proxy, MFA, 계정 수명주기, 운영 감사 보존, 업데이트 서명을 갖춘 뒤 외부 공개 범위를 검토합니다. DB/토큰/원본 화면/개인 접속 정보를 공개 저장소에 올리지 않습니다.
+기존 Oracle VM에 0.1.1 테스트 서버와 Cloudflare 임시 HTTPS 터널을 배포했습니다. 2026-10-16 두 서비스가 실행 중임을 재확인했습니다. 고정 주소의 상시 운영 배포는 아직 완료하지 않았습니다. HTTPS reverse proxy, MFA, 계정 수명주기, 운영 감사 보존, 업데이트 서명을 갖춘 뒤 외부 공개 범위를 검토합니다. DB/토큰/원본 화면/개인 접속 정보를 공개 저장소에 올리지 않습니다.
